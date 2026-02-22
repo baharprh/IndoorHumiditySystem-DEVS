@@ -1,0 +1,15 @@
+# build artifacts
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.o
+
+# logs/output
+logs/*.log
+
+# OS/editor
+.DS_Store
+.vscode/
