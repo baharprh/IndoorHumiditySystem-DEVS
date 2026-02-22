@@ -1,7 +1,3 @@
-# Indoor Humidity Regulation System  
-SYSC 5104 / SYSC 4906G – Assignment 1  
-Bahareh Pourahmad  
-
 ## Description
 
 This project implements a hierarchical DEVS model of an indoor humidity
