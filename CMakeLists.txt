@@ -8,8 +8,8 @@ add_executable(main src/main.cpp)
 
 target_include_directories(main PRIVATE
   ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/../cadmium/include
-  ${CMAKE_SOURCE_DIR}/../cadmium/json/single_include
+  ${CMAKE_SOURCE_DIR}/external/cadmium/include
+  ${CMAKE_SOURCE_DIR}/external/cadmium/json/single_include
 )
 
 target_link_libraries(main PRIVATE pthread)
