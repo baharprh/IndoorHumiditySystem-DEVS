@@ -1,9 +1,11 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-mkdir -p build logs
+# go to project root (one level above scripts/)
+cd "$(dirname "$0")/.."
 
+rm -rf build
 cmake -S . -B build
 cmake --build build -j
 
-./build/main input_data/outdoor_dry.txt > logs/dry_run.log
+./build/main input_data/outdoor_dry.txt

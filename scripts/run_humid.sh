@@ -1,9 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-mkdir -p build logs
+cd "$(dirname "$0")/.."
 
+rm -rf build
 cmake -S . -B build
 cmake --build build -j
 
-./build/main input_data/outdoor_humid.txt > logs/humid_run.log
+./build/main input_data/outdoor_humid.txt
