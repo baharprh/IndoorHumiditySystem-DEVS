@@ -51,3 +51,5 @@ chmod +x scripts/*.sh
 ./scripts/run_dry.sh
 ./scripts/run_humid.sh
 ./scripts/run_stepchange.sh
+
+Simulation logs are generated inside the `logs/` directory.
