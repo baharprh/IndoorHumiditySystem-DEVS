@@ -33,3 +33,21 @@ From the project root directory:
 ```bash
 cmake -S . -B build
 cmake --build build -j
+The executable will be generated inside the `build/` directory.
+
+---
+
+## Quick Start (Clone and Run)
+
+To clone and execute the project from a clean environment:
+
+```bash
+git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
+cd IndoorHumiditySystem-DEVS
+git submodule update --init --recursive
+chmod +x scripts/*.sh
+
+# Run experimental scenarios
+./scripts/run_dry.sh
+./scripts/run_humid.sh
+./scripts/run_stepchange.sh
