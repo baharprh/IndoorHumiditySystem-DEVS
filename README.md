@@ -21,7 +21,6 @@ The objective is to regulate indoor humidity around a 45% reference value using 
 - CMake (>= 3.16)
 - Git
 - Cadmium DEVS framework (included as submodule)
-- Boost (installed using vcpkg)
 - Visual Studio with Desktop development with C++ workload (Windows)
 
 ---
