@@ -1,4 +1,4 @@
-# build artifacts
+# Build artifacts
 build/
 cmake-build-*/
 CMakeFiles/
@@ -7,11 +7,16 @@ Makefile
 cmake_install.cmake
 *.o
 
-# logs/output
+# Executables
+*.exe
+
+# Logs
+*.log
 logs/*.log
 
-# OS/editor
+# OS files
 .DS_Store
+Thumbs.db
+
+# Editor
 .vscode/
-build/
-*.log
