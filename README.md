@@ -40,8 +40,44 @@ The objective is to regulate indoor humidity around a 45% reference value using 
 
 ## Build and Run Instructions (Windows)
 
-### 1. Clone the repository
 ```bash
 git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
 cd IndoorHumiditySystem-DEVS
 git submodule update --init --recursive
+
+Make sure vcpkg is installed. Then in PowerShell:
+
+$env:VCPKG_ROOT="C:/vcpkg"
+
+If Boost is not installed:
+
+vcpkg install boost
+
+Build the project:
+
+mkdir build
+cd build
+cmake ..
+cmake --build .
+
+Run the simulation:
+
+.\Debug\main.exe
+Output
+
+After running the simulation, the program prints:
+
+Simulation finished.
+Wrote log: simulation_messages.log
+
+The output log file is generated automatically during execution.
+
+Notes
+
+The Cadmium framework is included as a submodule and must be initialized using:
+
+git submodule update --init --recursive
+
+Boost is required for compilation.
+
+If Boost is not found, ensure vcpkg is installed and the VCPKG_ROOT environment variable is set correctly.
