@@ -62,22 +62,9 @@ cmake --build .
 
 Run the simulation:
 
-.\Debug\main.exe
-Output
+.\build\Debug\main.exe
 
-After running the simulation, the program prints:
+Output:
 
 Simulation finished.
 Wrote log: simulation_messages.log
-
-The output log file is generated automatically during execution.
-
-Notes
-
-The Cadmium framework is included as a submodule and must be initialized using:
-
-git submodule update --init --recursive
-
-Boost is required for compilation.
-
-If Boost is not found, ensure vcpkg is installed and the VCPKG_ROOT environment variable is set correctly.
