@@ -2,8 +2,7 @@
 
 ## Description
 
-This project implements a hierarchical DEVS model of an indoor humidity
-regulation system using the Cadmium simulation framework.
+This project implements a hierarchical DEVS model of an indoor humidity regulation system using the Cadmium simulation framework.
 
 The system consists of the following components:
 
@@ -12,44 +11,38 @@ The system consists of the following components:
 - **Humistat** – Hysteresis-based ON/OFF controller
 - **Humidifier** – Moisture injection actuator
 
-The objective is to regulate indoor humidity around a 45% reference value
-using discrete-event control with hysteresis (43%–47%).
+The objective is to regulate indoor humidity around a 45% reference value using discrete-event control with hysteresis (43%–47%).
 
 ---
 
 ## Requirements
 
 - C++17 compatible compiler
-- CMake (>= 3.10)
+- CMake (>= 3.16)
 - Git
 - Cadmium DEVS framework (included as submodule)
+- Boost (installed with `vcpkg`)
+- Visual Studio with Desktop development with C++ workload (Windows)
 
 ---
 
-## Build Instructions (Manual Build)
+## Repository Structure
 
-From the project root directory:
-
-```bash
-cmake -S . -B build
-cmake --build build -j
-The executable will be generated inside the `build/` directory.
+- `src/` – source files
+- `include/` – header files
+- `input_data/` – input files
+- `logs/` – output folder for logs
+- `external/cadmium/` – Cadmium framework submodule
+- `CMakeLists.txt` – build configuration
+- `simulation_messages.log` – generated simulation output log after running the program
 
 ---
 
-## Quick Start (Clone and Run)
+## Build Instructions (Windows)
 
-To clone and execute the project from a clean environment:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
 cd IndoorHumiditySystem-DEVS
 git submodule update --init --recursive
-chmod +x scripts/*.sh
-
-# Run experimental scenarios
-./scripts/run_dry.sh
-./scripts/run_humid.sh
-./scripts/run_stepchange.sh
-
-Simulation logs are generated inside the `logs/` directory.
