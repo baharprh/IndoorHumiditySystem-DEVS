@@ -1,47 +1,67 @@
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include <cadmium/modeling/dynamic_model.hpp>
 #include <cadmium/modeling/dynamic_model_translator.hpp>
 
-#include "atomics/IndoorAir.hpp"
-#include "atomics/Humidifier.hpp"
-#include "atomics/Humistat.hpp"
-#include "atomics/LeakageEstimator.hpp"
+#include "../atomics/IndoorAir.hpp"
+#include "../atomics/LeakageEstimator.hpp"
+#include "HumidityPlant.hpp"
 
 namespace humidity {
 
+struct IndoorHumiditySystem_defs {
+    struct out_rh : public cadmium::out_port<double> {};
+};
+
 template<typename TIME>
-std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> make_IndoorHumiditySystem() {
-    using namespace cadmium;
+std::shared_ptr<cadmium::dynamic::modeling::coupled<TIME>> make_IndoorHumiditySystem(const std::string&) {
+    auto indoor_air =
+        cadmium::dynamic::translate::make_dynamic_atomic_model<IndoorAir, TIME>("indoor_air");
 
-    dynamic::modeling::Ports iports = {};
-    dynamic::modeling::Ports oports = {};
-    dynamic::modeling::EICs eics = {};
-    dynamic::modeling::EOCs eocs = {};
+    auto leakage =
+        cadmium::dynamic::translate::make_dynamic_atomic_model<LeakageEstimator, TIME>("leakage");
 
-    auto indoor      = dynamic::translate::make_dynamic_atomic_model<IndoorAir, TIME>("indoor");
-    auto humistat    = dynamic::translate::make_dynamic_atomic_model<Humistat, TIME>("humistat");
-    auto humidifier  = dynamic::translate::make_dynamic_atomic_model<Humidifier, TIME>("humidifier");
-    auto leakage     = dynamic::translate::make_dynamic_atomic_model<LeakageEstimator, TIME>("leakage");
+    auto plant = make_HumidityPlant<TIME>();
 
-    dynamic::modeling::Models submodels = {indoor, humistat, humidifier, leakage};
+    cadmium::dynamic::modeling::Ports iports = {};
+    cadmium::dynamic::modeling::Ports oports = {typeid(IndoorHumiditySystem_defs::out_rh)};
+    cadmium::dynamic::modeling::Models submodels = {indoor_air, leakage, plant};
 
-    dynamic::modeling::ICs ics = {
-        // indoor RH -> leakage & humistat
-        dynamic::translate::make_IC<typename IndoorAir_defs::out_rh, typename LeakageEstimator_defs::in_rh>("indoor", "leakage"),
-        dynamic::translate::make_IC<typename IndoorAir_defs::out_rh, typename Humistat_defs::in_rh>("indoor", "humistat"),
+    cadmium::dynamic::modeling::EICs eics = {};
 
-        // leak -> indoor
-        dynamic::translate::make_IC<typename LeakageEstimator_defs::out_leak, typename IndoorAir_defs::in_leak>("leakage", "indoor"),
-
-        // humistat cmd -> humidifier cmd
-        dynamic::translate::make_IC<typename Humistat_defs::out_cmd, typename Humidifier_defs::in_cmd>("humistat", "humidifier"),
-
-        // humidifier injection -> indoor
-        dynamic::translate::make_IC<typename Humidifier_defs::out_inj, typename IndoorAir_defs::in_inj>("humidifier", "indoor")
+    cadmium::dynamic::modeling::EOCs eocs = {
+        cadmium::dynamic::translate::make_EOC<
+            IndoorAir_defs::out_rh,
+            IndoorHumiditySystem_defs::out_rh
+        >("indoor_air")
     };
 
-    return std::make_shared<dynamic::modeling::coupled<TIME>>(
+    cadmium::dynamic::modeling::ICs ics = {
+        cadmium::dynamic::translate::make_IC<
+            IndoorAir_defs::out_rh,
+            LeakageEstimator_defs::in_rh
+        >("indoor_air", "leakage"),
+
+        cadmium::dynamic::translate::make_IC<
+            IndoorAir_defs::out_rh,
+            HumidityPlant_defs::in_rh
+        >("indoor_air", "HumidityPlant"),
+
+        cadmium::dynamic::translate::make_IC<
+            LeakageEstimator_defs::out_leak,
+            IndoorAir_defs::in_leak
+        >("leakage", "indoor_air"),
+
+        cadmium::dynamic::translate::make_IC<
+            HumidityPlant_defs::out_inj,
+            IndoorAir_defs::in_inj
+        >("HumidityPlant", "indoor_air")
+    };
+
+    return std::make_shared<cadmium::dynamic::modeling::coupled<TIME>>(
         "IndoorHumiditySystem", submodels, iports, oports, eics, eocs, ics
     );
 }

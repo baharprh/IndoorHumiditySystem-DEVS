@@ -10,5 +10,5 @@ target_include_directories(main PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/external/cadmium/include
     ${CMAKE_SOURCE_DIR}/external/cadmium/json/single_include
-    $ENV{VCPKG_ROOT}/installed/x64-windows/include
+    ${CMAKE_SOURCE_DIR}/vcpkg/installed/x64-windows/include
 )
