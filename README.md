@@ -58,4 +58,4 @@ Simulation finished.
 Wrote log: simulation_messages.log
 ```
 
-Note: On Windows, after running `cd build`, the executable is generated inside `Debug/`.
+Note: Run the commands from a normal directory (not inside another build folder). On Windows, after running `cd build`, the executable is located in `Debug/`.
