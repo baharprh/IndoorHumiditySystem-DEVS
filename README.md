@@ -48,14 +48,14 @@ cd build
 cmake ..
 cmake --build .
 
-.\build\Debug\main.exe
+.\Debug\main.exe
 ```
 
 Output:
 
-```
+```text
 Simulation finished.
 Wrote log: simulation_messages.log
 ```
 
-Note: On Windows, the executable is generated inside build/Debug/ after compilation.
+Note: On Windows, after running `cd build`, the executable is generated inside `Debug/`.
