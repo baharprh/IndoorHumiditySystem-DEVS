@@ -46,3 +46,5 @@ The objective is to regulate indoor humidity around a 45% reference value using 
 git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
 cd IndoorHumiditySystem-DEVS
 git submodule update --init --recursive
+# Run simulation
+.\build\Debug\main.exe
