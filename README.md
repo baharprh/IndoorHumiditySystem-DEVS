@@ -68,3 +68,4 @@ Output:
 
 Simulation finished.
 Wrote log: simulation_messages.log
+Note: On Windows, the executable is generated inside build/Debug/ after compilation.
