@@ -38,24 +38,24 @@ The objective is to regulate indoor humidity around a 45% reference value using 
 ---
 ## Build and Run Instructions (Windows)
 
+```bash
 git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
 cd IndoorHumiditySystem-DEVS
 git submodule update --init --recursive
-
-Build the project:
 
 mkdir build
 cd build
 cmake ..
 cmake --build .
 
-Run the simulation:
-
 .\build\Debug\main.exe
+```
 
 Output:
 
+```
 Simulation finished.
 Wrote log: simulation_messages.log
+```
 
 Note: On Windows, the executable is generated inside build/Debug/ after compilation.
