@@ -36,21 +36,11 @@ The objective is to regulate indoor humidity around a 45% reference value using 
 - `simulation_messages.log` – generated simulation output log after running the program  
 
 ---
-
 ## Build and Run Instructions (Windows)
 
-```bash
 git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
 cd IndoorHumiditySystem-DEVS
 git submodule update --init --recursive
-
-Make sure vcpkg is installed. Then in PowerShell:
-
-$env:VCPKG_ROOT="C:/vcpkg"
-
-If Boost is not installed:
-
-vcpkg install boost
 
 Build the project:
 
@@ -67,4 +57,5 @@ Output:
 
 Simulation finished.
 Wrote log: simulation_messages.log
+
 Note: On Windows, the executable is generated inside build/Debug/ after compilation.
