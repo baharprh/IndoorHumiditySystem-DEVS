@@ -1,67 +1,62 @@
-#pragma once
+#ifndef __LEAKAGE_ESTIMATOR_HPP__
+#define __LEAKAGE_ESTIMATOR_HPP__
 
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/message_bag.hpp>
-
-#include <ostream>
+#include <core/modeling/atomic.hpp>
+#include <iostream>
+#include <string>
 
 namespace humidity {
 
-struct LeakageEstimator_defs {
-    // indoor RH input (%)
-    struct in_rh : public cadmium::in_port<double> {};
-    // leakage output (arbitrary units)
-    struct out_leak : public cadmium::out_port<double> {};
+struct LeakageEstimatorState {
+    double sigma;
+    double last_rh;
+    double leak;
+
+    LeakageEstimatorState() : sigma(1.0), last_rh(50.0), leak(0.0) {}
 };
 
-template<typename TIME>
-class LeakageEstimator {
-public:
-    using input_ports  = std::tuple<typename LeakageEstimator_defs::in_rh>;
-    using output_ports = std::tuple<typename LeakageEstimator_defs::out_leak>;
+inline std::ostream& operator<<(std::ostream& os, const LeakageEstimatorState& state) {
+    os << "last_rh=" << state.last_rh << ";leak=" << state.leak;
+    return os;
+}
 
-    struct state_type {
-        double last_rh = 50.0;
-        double leak    = 0.0;
-    };
-    state_type state;
+class LeakageEstimator : public cadmium::Atomic<LeakageEstimatorState> {
+public:
+    cadmium::Port<double> in_rh;
+    cadmium::Port<double> out_leak;
 
     double k_leak = 0.01;
     double rh_ref = 50.0;
 
-    LeakageEstimator() = default;
-
-    void internal_transition() {
-        // nothing (updates happen on external input)
+    explicit LeakageEstimator(const std::string& id)
+        : cadmium::Atomic<LeakageEstimatorState>(id, LeakageEstimatorState()) {
+        in_rh = addInPort<double>("in_rh");
+        out_leak = addOutPort<double>("out_leak");
     }
 
-    void external_transition(TIME, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        const auto& in = cadmium::get_messages<typename LeakageEstimator_defs::in_rh>(mbs);
-        if (!in.empty()) {
-            state.last_rh = in.back();
-            state.leak = k_leak * (state.last_rh - rh_ref);
+    void internalTransition(LeakageEstimatorState& state) const override {
+        state.sigma = 1.0;
+    }
+
+    void externalTransition(LeakageEstimatorState& state, double e) const override {
+        (void)e;
+        if (!in_rh->empty()) {
+            for (const auto x : in_rh->getBag()) {
+                state.last_rh = x;
+                state.leak = k_leak * (state.last_rh - rh_ref);
+            }
         }
     }
 
-    void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-        internal_transition();
-        external_transition(e, std::move(mbs));
+    void output(const LeakageEstimatorState& state) const override {
+        out_leak->addMessage(state.leak);
     }
 
-    typename cadmium::make_message_bags<output_ports>::type output() const {
-        typename cadmium::make_message_bags<output_ports>::type out;
-        cadmium::get_messages<typename LeakageEstimator_defs::out_leak>(out).push_back(state.leak);
-        return out;
-    }
-
-    TIME time_advance() const {
-        return TIME(1.0);
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const state_type& s) {
-        os << "{last_rh=" << s.last_rh << ", leak=" << s.leak << "}";
-        return os;
+    [[nodiscard]] double timeAdvance(const LeakageEstimatorState& state) const override {
+        return state.sigma;
     }
 };
 
 } // namespace humidity
+
+#endif

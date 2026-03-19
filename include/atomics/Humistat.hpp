@@ -1,63 +1,67 @@
-#pragma once
+#ifndef __HUMISTAT_HPP__
+#define __HUMISTAT_HPP__
 
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/message_bag.hpp>
-
-#include <ostream>
+#include <core/modeling/atomic.hpp>
+#include <iostream>
+#include <string>
 
 namespace humidity {
 
-    struct Humistat_defs {
-        struct in_rh   : public cadmium::in_port<double> {};
-        struct out_cmd : public cadmium::out_port<double> {};
-    };
+struct HumistatState {
+    double sigma;
+    double last_rh;
+    double cmd;
 
-    template<typename TIME>
-    class Humistat {
-    public:
-        using input_ports  = std::tuple<typename Humistat_defs::in_rh>;
-        using output_ports = std::tuple<typename Humistat_defs::out_cmd>;
+    HumistatState() : sigma(1.0), last_rh(50.0), cmd(0.0) {}
+};
 
-        struct state_type {
-            double last_rh = 50.0;
-            double cmd     = 0.0;
-        };
-        state_type state;
+inline std::ostream& operator<<(std::ostream& os, const HumistatState& state) {
+    os << "last_rh=" << state.last_rh << ";cmd=" << state.cmd;
+    return os;
+}
 
-        double rh_set = 55.0;   // target RH
-        double deadband = 2.0;
+class Humistat : public cadmium::Atomic<HumistatState> {
+public:
+    cadmium::Port<double> in_rh;
+    cadmium::Port<double> out_cmd;
 
-        Humistat() = default;
+    double rh_set = 55.0;
+    double deadband = 2.0;
 
-        void internal_transition() { /* nothing */ }
+    explicit Humistat(const std::string& id)
+        : cadmium::Atomic<HumistatState>(id, HumistatState()) {
+        in_rh = addInPort<double>("in_rh");
+        out_cmd = addOutPort<double>("out_cmd");
+    }
 
-        void external_transition(TIME, typename cadmium::make_message_bags<input_ports>::type mbs) {
-            const auto& in = cadmium::get_messages<typename Humistat_defs::in_rh>(mbs);
-            if (!in.empty()) {
-                state.last_rh = in.back();
+    void internalTransition(HumistatState& state) const override {
+        state.sigma = 1.0;
+    }
 
-                if (state.last_rh < rh_set - deadband) state.cmd = 1.0;  // ON
-                else if (state.last_rh > rh_set + deadband) state.cmd = 0.0; // OFF
+    void externalTransition(HumistatState& state, double e) const override {
+        (void)e;
+        if (!in_rh->empty()) {
+            for (const auto x : in_rh->getBag()) {
+                state.last_rh = x;
+
+                if (state.last_rh < rh_set - deadband) {
+                    state.cmd = 1.0;
+                } else if (state.last_rh > rh_set + deadband) {
+                    state.cmd = 0.0;
+                }
             }
         }
+    }
 
-        void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-            internal_transition();
-            external_transition(e, std::move(mbs));
-        }
+    void output(const HumistatState& state) const override {
+        out_cmd->addMessage(state.cmd);
+    }
 
-        typename cadmium::make_message_bags<output_ports>::type output() const {
-            typename cadmium::make_message_bags<output_ports>::type out;
-            cadmium::get_messages<typename Humistat_defs::out_cmd>(out).push_back(state.cmd);
-            return out;
-        }
-
-        TIME time_advance() const { return TIME(1.0); }
-
-        friend std::ostream& operator<<(std::ostream& os, const state_type& s) {
-            os << "{last_rh=" << s.last_rh << ", cmd=" << s.cmd << "}";
-            return os;
-        }
-    };
+    [[nodiscard]] double timeAdvance(const HumistatState& state) const override {
+        return state.sigma;
+    }
+};
 
 } // namespace humidity
+
+#endif

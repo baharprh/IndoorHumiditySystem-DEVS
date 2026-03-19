@@ -1,58 +1,40 @@
-#include <cadmium/modeling/dynamic_model.hpp>
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
+#include <core/simulation/root_coordinator.hpp>
+#include <core/logger/csv.hpp>
 
-#include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "../include/coupled/IndoorHumiditySystem.hpp"
 
-using TIME = double;
-
-static std::ofstream out_messages("../logs/simulation_messages.log");
-
-struct oss_sink_messages {
-    static std::ostream& sink() {
-        return out_messages;
-    }
-};
-
-using state_logger = cadmium::logger::logger<
-    cadmium::logger::logger_state,
-    cadmium::dynamic::logger::formatter<TIME>,
-    oss_sink_messages
->;
-
-using messages_logger = cadmium::logger::logger<
-    cadmium::logger::logger_messages,
-    cadmium::dynamic::logger::formatter<TIME>,
-    oss_sink_messages
->;
-
-using global_time_logger = cadmium::logger::logger<
-    cadmium::logger::logger_global_time,
-    cadmium::dynamic::logger::formatter<TIME>,
-    oss_sink_messages
->;
-
-using logger_top = cadmium::logger::multilogger<
-    state_logger,
-    messages_logger,
-    global_time_logger
->;
-
-int main(int argc, char** argv) {
-    std::string input_file = (argc > 1) ? argv[1] : "../input_data/outdoor_dry.txt";
+int main(int argc, char* argv[]) {
+    std::string scenarioArg = (argc > 1) ? std::string(argv[1]) : "input_data/outdoor_dry.txt";
     double sim_time = (argc > 2) ? std::stod(argv[2]) : 200.0;
 
-    auto TOP = humidity::make_IndoorHumiditySystem<TIME>(input_file);
+    std::string scenarioName = scenarioArg;
+    size_t slash = scenarioName.find_last_of("/\\");
+    if (slash != std::string::npos) {
+        scenarioName = scenarioName.substr(slash + 1);
+    }
+    size_t dot = scenarioName.find_last_of('.');
+    if (dot != std::string::npos) {
+        scenarioName = scenarioName.substr(0, dot);
+    }
 
-    cadmium::dynamic::engine::runner<TIME, logger_top> r(TOP, TIME(0));
-    r.run_until(TIME(sim_time));
+    auto model = std::make_shared<humidity::IndoorHumiditySystem>("IndoorHumiditySystem");
+    auto rootCoordinator = cadmium::RootCoordinator(model);
+
+    auto logger = std::make_shared<cadmium::CSVLogger>(
+        "logs/" + scenarioName + ".csv", ","
+    );
+    rootCoordinator.setLogger(logger);
+
+    rootCoordinator.start();
+    rootCoordinator.simulate(sim_time);
+    rootCoordinator.stop();
 
     std::cout << "Simulation finished." << std::endl;
-    std::cout << "Wrote log: ../logs/simulation_messages.log" << std::endl;
+    std::cout << "Wrote log: logs/" << scenarioName << ".csv" << std::endl;
 
     return 0;
 }

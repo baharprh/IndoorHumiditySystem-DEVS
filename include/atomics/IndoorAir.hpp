@@ -1,73 +1,73 @@
-#pragma once
+#ifndef __INDOOR_AIR_HPP__
+#define __INDOOR_AIR_HPP__
 
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/message_bag.hpp>
-
-#include <ostream>
+#include <core/modeling/atomic.hpp>
+#include <iostream>
+#include <string>
 
 namespace humidity {
 
-    struct IndoorAir_defs {
-        // moisture injection command (arbitrary units)
-        struct in_inj  : public cadmium::in_port<double> {};
-        // leakage rate (arbitrary units)
-        struct in_leak : public cadmium::in_port<double> {};
-        // indoor RH output (%)
-        struct out_rh  : public cadmium::out_port<double> {};
-    };
+struct IndoorAirState {
+    double sigma;
+    double rh;
+    double inj_last;
+    double leak_last;
 
-    template<typename TIME>
-    class IndoorAir {
-    public:
-        using input_ports  = std::tuple<typename IndoorAir_defs::in_inj, typename IndoorAir_defs::in_leak>;
-        using output_ports = std::tuple<typename IndoorAir_defs::out_rh>;
+    IndoorAirState() : sigma(1.0), rh(50.0), inj_last(0.0), leak_last(0.0) {}
+};
 
-        struct state_type {
-            double rh        = 50.0;
-            double inj_last  = 0.0;
-            double leak_last = 0.0;
-        };
-        state_type state;
+inline std::ostream& operator<<(std::ostream& os, const IndoorAirState& state) {
+    os << "rh=" << state.rh << ";inj=" << state.inj_last << ";leak=" << state.leak_last;
+    return os;
+}
 
-        IndoorAir() = default;
+class IndoorAir : public cadmium::Atomic<IndoorAirState> {
+public:
+    cadmium::Port<double> in_inj;
+    cadmium::Port<double> in_leak;
+    cadmium::Port<double> out_rh;
 
-        // REQUIRED
-        void internal_transition() {
-            // simple discrete update each second:
-            // RH increases with injection, decreases with leak
-            state.rh += 0.5 * state.inj_last - 0.5 * state.leak_last;
+    explicit IndoorAir(const std::string& id)
+        : cadmium::Atomic<IndoorAirState>(id, IndoorAirState()) {
+        in_inj = addInPort<double>("in_inj");
+        in_leak = addInPort<double>("in_leak");
+        out_rh = addOutPort<double>("out_rh");
+    }
 
-            // clamp to [0,100]
-            if (state.rh < 0.0)   state.rh = 0.0;
-            if (state.rh > 100.0) state.rh = 100.0;
+    void internalTransition(IndoorAirState& state) const override {
+        state.rh += 0.5 * state.inj_last - 0.5 * state.leak_last;
+
+        if (state.rh < 0.0) state.rh = 0.0;
+        if (state.rh > 100.0) state.rh = 100.0;
+
+        state.sigma = 1.0;
+    }
+
+    void externalTransition(IndoorAirState& state, double e) const override {
+        (void)e;
+
+        if (!in_inj->empty()) {
+            for (const auto x : in_inj->getBag()) {
+                state.inj_last = x;
+            }
         }
 
-        void external_transition(TIME, typename cadmium::make_message_bags<input_ports>::type mbs) {
-            const auto& inj  = cadmium::get_messages<typename IndoorAir_defs::in_inj>(mbs);
-            const auto& leak = cadmium::get_messages<typename IndoorAir_defs::in_leak>(mbs);
-
-            if (!inj.empty())  state.inj_last  = inj.back();
-            if (!leak.empty()) state.leak_last = leak.back();
+        if (!in_leak->empty()) {
+            for (const auto x : in_leak->getBag()) {
+                state.leak_last = x;
+            }
         }
+    }
 
-        void confluence_transition(TIME e, typename cadmium::make_message_bags<input_ports>::type mbs) {
-            internal_transition();
-            external_transition(e, std::move(mbs));
-        }
+    void output(const IndoorAirState& state) const override {
+        out_rh->addMessage(state.rh);
+    }
 
-        typename cadmium::make_message_bags<output_ports>::type output() const {
-            typename cadmium::make_message_bags<output_ports>::type out;
-            cadmium::get_messages<typename IndoorAir_defs::out_rh>(out).push_back(state.rh);
-            return out;
-        }
-
-        TIME time_advance() const { return TIME(1.0); }
-
-        // IMPORTANT: allow Cadmium to print the state
-        friend std::ostream& operator<<(std::ostream& os, const state_type& s) {
-            os << "{rh=" << s.rh << ", inj=" << s.inj_last << ", leak=" << s.leak_last << "}";
-            return os;
-        }
-    };
+    [[nodiscard]] double timeAdvance(const IndoorAirState& state) const override {
+        return state.sigma;
+    }
+};
 
 } // namespace humidity
+
+#endif
