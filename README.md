@@ -6,7 +6,17 @@ This project implements a hierarchical DEVS model of an indoor humidity regulati
 
 The system consists of the following components:
 
-- **IndoorAir** – Maintains and updates indoor relative humidity (RH)
+- **IndoorAir** – Maintains and updates indoor relative humgit clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
+cd IndoorHumiditySystem-DEVS
+git submodule update --init --recursive
+
+mkdir build
+cd build
+
+cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build . --config Debug
+
+.\Debug\main.exeidity (RH)
 - **LeakageEstimator** – Models environmental humidity drift
 - **Humidistat** – Hysteresis-based ON/OFF controller
 - **Humidifier** – Moisture injection actuator
