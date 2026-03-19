@@ -57,3 +57,32 @@ Logs are generated in:
 ```bash
 logs/
 ```
+## Build Instructions
+
+```bash
+make simulator
+```
+
+## Run Simulation
+
+Example:
+
+```bash
+./bin/MAIN input_data/outdoor_dry.txt 50
+```
+
+## Run All Scenarios
+
+```bash
+./scripts/run_dry.sh
+./scripts/run_humid.sh
+./scripts/run_stepchange.sh
+```
+
+## Output
+
+Logs are generated in:
+
+```bash
+logs/
+```
