@@ -84,3 +84,21 @@ logs/outdoor_stepchange.csv
 * The project uses a local copy of Cadmium included in the repository
 * No external installation (CMake, Boost, vcpkg) is required
 * Verified to work from a fresh clone
+  
+## Environment Note
+
+This project was tested in a DEVSsim / Linux environment.
+
+Build commands use `make`, so on Windows they should be executed using a Unix-like environment such as:
+- Git Bash
+- WSL (Windows Subsystem for Linux)
+
+## Reproducibility
+
+The project has been tested from a fresh clone:
+
+```bash
+git clone https://github.com/baharprh/IndoorHumiditySystem-DEVS.git
+cd IndoorHumiditySystem-DEVS
+make simulator
+./bin/MAIN input_data/outdoor_dry.txt 50
